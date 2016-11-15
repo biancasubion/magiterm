@@ -46,29 +46,21 @@ class Login extends React.Component {
   }
 
   handleSubmit(e, user, pass) {
-    const context = this;
     e.preventDefault();
-    axios.get('/login', {
+    var context = this;
+    axios.post('/authenticate', {
       params: {
-        username: user,
+        username: user, 
         password: pass
       }
     })
     .then(function(response) {
-      console.log(response);
-
       if (response) {
-        console.log('this is the username: ', response.data);
-        window.sessionStorage['username'] = response.data;
-        window.location = window.location + 'dashboard';
+        localStorage['jwtToken'] = response.data.token;
+        window.location = '/linuxcomputer'
+      } else {
+        alert("authentication failed");
       }
-      // context.setState({
-      //   password: '',
-      //   username: ''
-      // });
-    })
-    .catch(function(err) {
-      console.log(err);  
     });
   }
 

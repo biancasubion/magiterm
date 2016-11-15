@@ -8,6 +8,9 @@ const docker = require('../utils/dockerAPI');
 var db = require('../db/config');
 var User = require('../models/User');
 var passport = require('passport');
+const jwt = require('jsonwebtoken');
+const jwtDecode = require('jwt-decode')
+const secret = "PICOSHELL";
 var LocalStrategy = require('passport-local').Strategy;
 
 
@@ -130,6 +133,55 @@ router.get('/login', function(req, res) {
     }).catch(function(err) {
       res.send(404, err); 
     });
+});
+
+
+//authentication
+router.get('/decode', function(req, res) {
+  // console.log(req.body.token);
+  console.log(req.query);
+  const decoded = jwtDecode(req.query.token);
+  // console.log(decoded);
+  res.send(200, decoded)
+});
+
+router.post('/authenticate', function(req, res) {
+  const username = req.body.params.username;
+  const password = req.body.params.password;
+  User.findOne({
+    where: {
+      username: username
+    }
+  })
+  .then(function(response) {
+    console.log(response);
+    if (response) {
+      bcrypt.compare(password, response.dataValues.password, function(err, results) {
+        if (err) {
+          return console.log(err);
+        } else {
+          if (results === true) {
+            const userid = response.dataValues.id;
+            const claim = {
+              id: userid,
+              username: response.dataValues.username 
+            };
+            const token = jwt.sign(claim, secret);
+            const body = {
+              token: jwt.sign(claim, secret)
+            }
+            res.send(200, body);
+          } else {
+            res.send(200, results);
+          }
+        }
+      });
+    } else {
+      res.send(200, 'User not found');
+    }
+  }).catch(function(err) {
+    res.send(404, err); 
+  });
 });
 
 router.get('*', function(req, res, next) {

@@ -10,15 +10,6 @@ class Dashboard extends React.Component {
   }
 
   render() {
-    if (!sessionStorage['username']) {
-      window.location = '/';
-
-      return(
-        <div className="error"> 
-          You are not logged in! Returning back to Login Page...
-        </div>
-      )
-    } else {
       return (
           <div>
             Dashboard!
@@ -28,7 +19,6 @@ class Dashboard extends React.Component {
             <UserInfo />
           </div>
         );
-    }
   }
 }
 
