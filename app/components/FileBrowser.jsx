@@ -18,32 +18,32 @@ class FileBrowser extends React.Component {
 
   updateFileBrowser(path, containerName) {
     const context = this;
-    axios.post('/docker/cmd', { cmd: 'ls ' + path + ' -al', containerName: containerName })
-    .then(function(res) {
-      const contents = res.data.split('\n');
+    // axios.post('/docker/cmd', { cmd: 'ls ' + path + ' -al', containerName: containerName })
+    // .then(function(res) {
+    //   const contents = res.data.split('\n');
 
-      let contentsArr = [];
+    //   let contentsArr = [];
 
-      for (var i = 0; i < contents.length; i++) {
-        const arr = contents[i].split(" ");
-        let type;
-        if (arr[0].substring(0, 1) === "d") {
-          type = "folder"
-        } else if (arr[0].substring(0, 2) === "-r") {
-          type = "file"
-        }
-        const name = arr[arr.length - 1];
-        if(name !== '.pico') contentsArr.push({type: type, name: name});
-      }
-      //remove the last element, which is ''
-      //remove the first element, which is '.'
-      contentsArr.shift();
-      contentsArr.pop();
-      context.setState({
-        contents: contentsArr,
-        curDir: path
-      });
-    });
+    //   for (var i = 0; i < contents.length; i++) {
+    //     const arr = contents[i].split(" ");
+    //     let type;
+    //     if (arr[0].substring(0, 1) === "d") {
+    //       type = "folder"
+    //     } else if (arr[0].substring(0, 2) === "-r") {
+    //       type = "file"
+    //     }
+    //     const name = arr[arr.length - 1];
+    //     if(name !== '.pico') contentsArr.push({type: type, name: name});
+    //   }
+    //   //remove the last element, which is ''
+    //   //remove the first element, which is '.'
+    //   contentsArr.shift();
+    //   contentsArr.pop();
+    //   context.setState({
+    //     contents: contentsArr,
+    //     curDir: path
+    //   });
+    // });
   }
 
   componentWillMount() {
@@ -57,7 +57,6 @@ class FileBrowser extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     const context = this;
-    console.log('FB GOT PROPS', nextProps);
     this.setState({
       containerName: nextProps.containerName,
       hidden: nextProps.hidden

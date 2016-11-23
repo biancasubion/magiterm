@@ -10,6 +10,8 @@ const http = require('http');
 const User = require('../models/User');
 const Messages = require('../models/messages');
 const docker = require('../utils/dockerAPI');
+const cp = require('child_process');
+
 
 const crypto = require('crypto'),
     algorithm = 'aes-256-ctr',
@@ -70,11 +72,9 @@ io.on('connection', function(socket) {
     io.sockets.emit('/COM/' + data.containerName, data);
   });
 
-  socket.on('/ANALYZE/', function(command) {
-    console.log('in analyze!!!');
-
-    var cmd = command.command;
-    var containerName = command.containerName;
+  socket.on('/ANALYZE/', function (req, callback) {
+    var cmd = req.cmd;
+    var containerName = req.containerName;
 
     if(cmd.split(" ")[0] === 'cd') {
       let newdir = cmd.split(" ")[1];
@@ -93,11 +93,9 @@ io.on('connection', function(socket) {
 
           const command = 'bash -c "echo ' + newdir + ' > /picoShell/.pico' + '"'; 
           docker.runCommand(containerName, command, function(err, res1) {
-            if (err) {
-              io.sockets.emit('/CMD/' + containerName, err);
-            } else {
-              console.log('this is newdir', newdir);
-              io.sockets.emit('/CMD/' + containerName, {res: res1, pwd: newdir});
+            if (err) {io.sockets.emit('/CMD/' + containerName, err)} 
+            else {
+              callback({res: res1, pwd: newdir})
             }
           });
         });
@@ -108,41 +106,38 @@ io.on('connection', function(socket) {
           if(picoRes[picoRes.length - 1] === '\n') picoRes = picoRes.slice(0, picoRes.length - 1);
           if(picoRes[picoRes.length - 1] === '/') picoRes = picoRes.slice(0, picoRes.length - 1);
           const dir = picoRes + '/' + newdir;
-          console.log('this is the new path', dir);
-
           docker.directoryExists(containerName, dir, function(dirRes) {
             if(dirRes.indexOf('Directory exists') !== -1) {
               const command = 'bash -c "echo ' + dir + ' > /picoShell/.pico' + '"'; 
               //const command = 'bash -c "cd ' + newdir + '"';
               console.log(command);
               docker.runCommand(containerName, command, function(err, res1) {
-                if (err) { io.sockets.emit('/CMD/' + containerName, err);} 
-                else {
+                if (err) { io.sockets.emit('/CMD/' + containerName, err) } 
+                else { 
                   io.sockets.emit('/CMD/' + containerName, {res: res1, pwd: dir});
                 }
               });
             } else {
-              io.sockets.emit('/CMD/' + containerName, 'Error: Directory not found\n');
+              callback('Error: Directory not found\n');
             }
           });
         });
       }
-
       if(readyToExecute) {
         const command = 'bash -c "echo ' + newdir + ' > /picoShell/.pico' + '"';
         console.log(command);
         docker.directoryExists(containerName, newdir, function(dirRes) {
           if(dirRes.indexOf('Directory exists') !== -1) {
             docker.runCommand(containerName, command, function(err, res1) {
-              if (err) { io.sockets.emit('/CMD/' + containerName, err);} 
+              if (err) { io.sockets.emit('/CMD/' + containerName, err) } 
               else { 
                 docker.runCommand(containerName, 'cat /picoShell/.pico', function(err2, res2) {
-                  io.sockets.emit('/CMD/' + containerName, {res: res1, pwd: res2});
+                callback({res: res1, pwd: res2});
                 });
               }
             });
           } else {
-            io.sockets.emit('/CMD/' + containerName, err);
+            io.sockets.emit('/CMD/' + containerName, 'Error: Directory not found\n');
           }
         });
       }
@@ -154,17 +149,42 @@ io.on('connection', function(socket) {
           if(err2) {
             io.sockets.emit('/CMD/' + containerName, err2);
           } else {
-            const obj = {
-              termResponse: res2,
-              fileOpen: true,
-              fileName: cmd.split(" ")[1],
-              filePath: res1
-            }
-            console.log('this is the object file,', obj)
-            io.sockets.emit('/CMD/' + containerName, obj);
+        callback({termResponse: res2, fileOpen: true, fileName: cmd.split(" ")[1], filePath: res1});
           }
         });
       });
+    } else if (cmd.split(" ")[0] === 'pico') {
+      var fileName = cmd.split(" ")[1];
+      if(fileName.startsWith('/')) {
+        docker.runCommand(containerName, 'touch ' + fileName, function(err1, res1) {
+          if(err1) {
+            io.sockets.emit('/CMD/' + containerName, err1);
+          } else {
+            var filePath = fileName.slice(0, fileName.lastIndexOf('/'));
+            fileName = fileName.slice(fileName.lastIndexOf('/') + 1);
+            callback({newFile: true, res: res1, fileName: fileName, filePath: filePath});
+          }
+        });
+      } else {
+        docker.runCommand(containerName, 'cat /picoShell/.pico', function(err1, res1) {
+          if(res1[res1.length - 1] === '\n') res1 = res1.slice(0, res1.length - 1);
+          if(res1[res1.length - 1] === '/') res1 = res1.slice(0, res1.length - 1);
+          const command = 'touch ' + res1 + '/' + fileName;
+          docker.runCommand(containerName, command, function(err2, res2) {
+            if(err2) {
+              io.sockets.emit('/CMD/' + containerName, err2);
+            } else {
+              callback({termResponse: res2, fileName: fileName, filePath: res1, fileOpen: true});
+            }
+          });
+        });
+      }
+    } else if (cmd.split(" ")[0] === "node") {
+        nodeCP = cp.spawn('node', ['-i']);
+        nodeCP.stdin.write('1 + 1\n');
+        nodeCP.stdout.on('data',function (data) {
+            io.sockets.emit('/CMD/' + containerName, data.toString());
+        });
     } else {
       docker.runCommand(containerName, 'cat /picoShell/.pico', function(err1, res1) {
         console.log('response from cat /picoShell/.pico :', res1);
@@ -179,18 +199,16 @@ io.on('connection', function(socket) {
           const command = 'bash -c ' + cmd;
           console.log(command);
           docker.runCommand(containerName, command, function(err2, res2) {
-            if (err2) { io.sockets.emit('/CMD/' + command.containerName, err2); } 
+            if (err2) { io.sockets.emit('/CMD/' + containerName, err2) } 
             else {
-              console.log('emitting this: ', res2);
-              console.log('/CMD' + containerName, res2);
-              io.sockets.emit('/CMD/' + containerName, res2);
+              callback(res2)
             }
           });
         }
 
       }) 
     }
-  })
+  });
 
   socket.on('/userEncrypt', function(userObj) {
     //encrypt username

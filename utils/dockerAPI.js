@@ -1,4 +1,5 @@
 const exec = require('child_process').exec;
+const cp = require('child_process');
 
 const dockex = "docker exec -i"
 const build = "docker build -t"
@@ -13,34 +14,34 @@ const runCommand = function(containerName, command, callback) {
   const runCommandCommand = dockex + ' ' + containerName + ' ' + command;
   console.log('this is the command', runCommandCommand);
 
-  //const com = exec(runCommandCommand);
+  let com = exec(runCommandCommand);
+  com.stdout.on('data', function(data) {
+    console.log('this is data!!!!!', data.toString('utf-8'));
+    const output = data.toString('utf-8');
+    callback(null, output);
+  });
 
-  // com.stdout.on('data', function(data) {
-  //   console.log('this is data!!!!!', data.toString('utf-8'));
-  //   const output = data.toString('utf-8');
-  //   callback(null, output);
-  // });
 
-  // com.stderr.on('data', function(err) {
-  //   console.log('this is the error!!!', err.toString('utf-8'));
-  //   const output = err.toString('utf-8');
-  //   callback(output, null);
-  // });
+  com.stderr.on('data', function(err) {
+    console.log('this is the error!!!', err.toString('utf-8'));
+    const output = err.toString('utf-8');
+    callback(output, null);
+  });
 
-  // com.on('close', function (code) {
+  // com.on('exit', function (code) {
   //   console.log('Over and Out!', code);
   //    callback(null); 
   // });
 
-  exec(runCommandCommand, function(err, stdout, stderr) {
-    if (stderr && !stdout) {
-      console.log('error', stderr);
-      callback(stderr, null);
-    } else {
-      console.log('this is stdout', stdout);
-      callback(null, stdout);
-    }
-  });
+  // exec(runCommandCommand, function(err, stdout, stderr) {
+  //   if (stderr && !stdout) {
+  //     console.log('error', stderr);
+  //     callback(stderr, null);
+  //   } else {
+  //     console.log('this is stdout', stdout);
+  //     callback(null, stdout);
+  //   }
+  // });
 }
 
 const buildImage = function(dockerfile, command, callback) {
