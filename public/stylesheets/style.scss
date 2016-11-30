@@ -1062,6 +1062,7 @@ select {
     flex: 1;
     flex-wrap: wrap;
     overflow-y: auto;
+    min-width: 0;
     .code-editor-menu {
       padding: 0;
       margin: 0;
@@ -1566,6 +1567,7 @@ select {
           flex: 1;
           flex-wrap: wrap;
           overflow-y: auto;
+          min-width: 0;
           .code-editor-menu {
             padding: 0;
             margin: 0;
@@ -1892,7 +1894,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   overflow: hidden;
   background: white;
   width: 100%;
-  min-width: 500px;
+  min-width: 0px;
 }
 
 .CodeMirror-scroll {

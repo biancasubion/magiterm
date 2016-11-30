@@ -65,7 +65,6 @@ class LinuxComputer extends React.Component {
     });
 
     this.socket.on('/TERM/CD/' + user.username, function(code) {
-      console.log('LC CD', code);
       if(code.dir === context.state.curDir) return;
       context.setState({
         curDir: code.dir
@@ -137,9 +136,9 @@ class LinuxComputer extends React.Component {
                   <optgroup label="Collaborators">
                   <option value={this.state.username}>{this.state.username}</option>
                   {
-                    this.state.collabWith.map(function(user) {
+                    this.state.collabWith.map(function(user, i) {
                     return (
-                        <option value={user}>{user}</option>
+                        <option value={user} key={i}>{user}</option>
                       );
                   })}
                   </optgroup>

@@ -39,8 +39,6 @@ class Chatbox extends React.Component {
             text: res.data[i].message,
             time: res.data[i].createdAt
           };
-
-          console.log(msgObj)
           // arr.push(res.data[i].userID + ': ' + res.data[i].message);
           arr.push(msgObj);
         }
