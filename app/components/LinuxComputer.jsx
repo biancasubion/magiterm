@@ -5,6 +5,7 @@ const Terminal = require('./Terminal.jsx')
 const axios = require('axios');
 const NavBar = require('./NavBar.jsx');
 const Chatbox = require('./Chatbox.jsx');
+const CheatSheet = require('./CheatSheet.jsx');
 const FileBrowser = require('./FileBrowser.jsx');
 const SplitPane = require('react-split-pane');
 
@@ -167,6 +168,7 @@ class LinuxComputer extends React.Component {
                 </SplitPane>
               </div>
                 <Chatbox username={this.state.username} containerName={this.state.containerName}/>
+                <CheatSheet />
               <footer></footer>
             </div>
           );
