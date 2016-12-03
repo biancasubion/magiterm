@@ -136,7 +136,10 @@ class CodeEditor extends React.Component {
         CodeMirror.commands.save = function () {
           context.handleCodeSave();
         };
+      } else {
+        keyMap='default';
       }
+      
 
 
       this.editor.setOption("keyMap", keyMap);
