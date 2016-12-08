@@ -202,8 +202,7 @@ class Terminal extends React.Component {
             context.socket.emit('/TERM/PAUSE/', {containerName: context.state.containerName});
             axios.post('/docker/cmd', { cmd: command, containerName: context.state.containerName, curDir: context.state.curDir })
               .then(function(res) {
-                context.terminal.resume();
-                context.socket.emit('/TERM/RESUME/', {containerName: context.state.containerName});
+                console.log('in here!!!', command);
                 if(typeof res.data === 'object') {
                   if(res.data.fileOpen) {
                     console.log(res.data);
@@ -266,6 +265,8 @@ class Terminal extends React.Component {
                     curCommand: ''
                   });
                 }
+                context.terminal.resume();
+                context.socket.emit('/TERM/RESUME/', {containerName: context.state.containerName});
               })
               .catch(function(err) {
                 console.error('RUN ERR', err);

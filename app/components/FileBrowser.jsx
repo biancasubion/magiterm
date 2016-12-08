@@ -16,7 +16,6 @@ class FileBrowser extends React.Component {
       hidden: true
     };
     
-    this.socket = io();
     this.doubleClick = this.doubleClick.bind(this);
     this.downloadClick = this.downloadClick.bind(this);
     this.updateFileBrowser = this.updateFileBrowser.bind(this);
